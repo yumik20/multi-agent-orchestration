@@ -6,6 +6,18 @@ I also built the local dashboard app as a contribution to [OpenClaw](https://git
 
 **System overview:** 16,000+ lines of Python/JavaScript. Zero external dependencies. Manages agent scheduling, cross-platform data collection (LinkedIn, X, HN/Reddit, Substack), AI-powered qualification pipelines, real-time dashboard visualization, and a structured knowledge base with audit trails.
 
+## Screenshots
+
+### Operational Dashboard — Weekly Schedule, Cost Tracking, Agent Status
+![Dashboard Overview](screenshots/dashboard-overview.png)
+
+The dashboard shows real-time agent status, weekly schedule calendar with time-positioned tasks, LLM cost tracking across providers, and scan app health monitoring. Built with vanilla JavaScript — no frameworks.
+
+### Agent Org Chart — Multi-Agent Hierarchy
+![Org Chart](screenshots/org-chart.png)
+
+Hierarchical view of the agent team: a manager agent coordinates 5 worker agents across two product teams. Each agent has a defined role, model assignment, and reporting structure.
+
 ## Architecture
 
 ```
