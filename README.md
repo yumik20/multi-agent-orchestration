@@ -1,6 +1,8 @@
 # Multi-Agent AI System — Code Samples
 
-Selected code samples from a multi-agent orchestration platform I built for enterprise AI workflows. The full system coordinates 6 specialized AI agents that perform intelligence gathering, content generation, and operational monitoring across enterprise data sources.
+Selected code samples from a multi-agent orchestration platform I built to run real marketing operations for my enterprise AI startup. The system coordinates 6 specialized AI agents that handle daily intelligence gathering, content creation, and operational monitoring — this is production software doing real work, not a research prototype.
+
+I also built the local dashboard app as a contribution to [OpenClaw](https://github.com/anthropics/openclaw) — it helps operators track agent performance, manage costs across LLM providers, and supervise multi-agent workflows without constantly watching logs.
 
 **System overview:** 16,000+ lines of Python/JavaScript. Zero external dependencies. Manages agent scheduling, cross-platform data collection (LinkedIn, X, HN/Reddit, Substack), AI-powered qualification pipelines, real-time dashboard visualization, and a structured knowledge base with audit trails.
 
@@ -66,6 +68,8 @@ Cross-platform intelligence gathering with AI-powered quality filtering. Key fea
 
 ## Context
 
-This system was built as part of my research on how multi-agent AI systems interact with organizational workflows. The knowledge base design reflects the "Organizational Intelligence Loop" framework from my published research on enterprise AI adoption — specifically, how AI systems can maintain durable, auditable knowledge about organizational behavior patterns.
+I built this system to run real marketing operations for my enterprise AI startup — the agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard app was built as a contribution to OpenClaw, giving operators visibility into agent performance, LLM costs, and scheduling without manual log-reading.
 
-The code demonstrates applied work in: agent orchestration, human-AI collaboration systems, NLP pipeline design, knowledge management, and operational monitoring.
+The knowledge base grew out of a practical need: as the agents collected hundreds of signals per week, I needed a structured way to qualify, promote, and maintain durable knowledge that both humans and AI agents could rely on. The design reflects ideas from my published research ("The Organizational Intelligence Loop") on how enterprise AI systems can maintain auditable organizational knowledge.
+
+The code demonstrates applied work in: agent orchestration, human-AI collaboration systems, NLP pipeline design, knowledge management, cost optimization, and operational monitoring.

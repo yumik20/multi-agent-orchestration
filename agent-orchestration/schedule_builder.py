@@ -124,9 +124,9 @@ def build_weekly_schedule_view(agents: list[dict]) -> dict:
     for day in calendar_events:
         assign_overlap_lanes(calendar_events[day])
         calendar_events[day].sort(key=lambda item: (item["startMin"], item["laneIndex"], item["bot"]))
-    meta7_summary = [
+    manager_summary = [
         item for item in rows
-        if item["bot"] == "Meta7"
+        if item["bot"] == "Manager"
     ]
     worker_rows = [row for row in rows if row["managerType"] != "manager"]
     day_start_min = max(0, ((min(all_start_mins) // 60) - 1) * 60) if all_start_mins else 8 * 60
@@ -142,7 +142,7 @@ def build_weekly_schedule_view(agents: list[dict]) -> dict:
         "dayStartMin": day_start_min,
         "dayEndMin": day_end_min,
         "currentTimeMin": current_time_min,
-        "meta7Summary": meta7_summary[0] if meta7_summary else None,
+        "managerSummary": manager_summary[0] if manager_summary else None,
     }
 
 

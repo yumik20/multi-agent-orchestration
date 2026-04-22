@@ -1,4 +1,4 @@
-# BehaviorGraph Wiki — Index
+# enterprise AI Wiki — Index
 
 This is the catalog of maintained knowledge pages. **Read this first.** Every wiki page should appear here under exactly one category. Pages not listed here are orphans — `kmspace-lint-heal` will flag them.
 
@@ -6,7 +6,7 @@ This is the catalog of maintained knowledge pages. **Read this first.** Every wi
 
 ## Core Concepts
 
-The foundational thesis layer. What BehaviorGraph is and why it exists.
+The foundational thesis layer. What enterprise AI is and why it exists.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
@@ -15,7 +15,7 @@ The foundational thesis layer. What BehaviorGraph is and why it exists.
 
 ## Use Cases
 
-Canonical use-case families — what real problems BehaviorGraph solves.
+Canonical use-case families — what real problems enterprise AI solves.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|

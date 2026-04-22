@@ -14,7 +14,7 @@ Convert scan findings into durable, auditable knowledge without losing the origi
 4. Evaluate:
    - support quality
    - novelty
-   - relevance to BehaviorGraph thesis or use cases
+   - relevance to enterprise AI thesis or use cases
    - conflict with approved claims or guardrails
    - duplication with existing wiki pages
 5. Assign one disposition:

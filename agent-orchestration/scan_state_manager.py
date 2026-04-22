@@ -45,9 +45,9 @@ def expire_stuck_scan_state(state: dict, saver, *, app_slug: str,
     except Exception as exc:
         sys.stderr.write(f"expire_stuck_scan_state: saver failed for {app_slug}: {exc}\n")
     try:
-        meta7_dm_scan_result(app_slug, status="failed", error=reason)
+        notify_scan_result(app_slug, status="failed", error=reason)
     except Exception as exc:
-        sys.stderr.write(f"expire_stuck_scan_state: meta7_dm failed for {app_slug}: {exc}\n")
+        sys.stderr.write(f"expire_stuck_scan_state: notify_manager failed for {app_slug}: {exc}\n")
     return updated
 
 

@@ -84,7 +84,7 @@ function renderScheduleCalendar(weeklySchedule, options = {}) {
           return `
             <button
               type="button"
-              class="schedule-event ${botColorClass} ${compactCards ? `schedule-event-compact ${densityClass}` : ""} ${event.bot === "Meta7" ? "schedule-event-core" : ""} ${event.isActiveNow ? "is-active-now" : ""} ${isClippedStart ? "is-clipped-start" : ""} ${isClippedEnd ? "is-clipped-end" : ""}"
+              class="schedule-event ${botColorClass} ${compactCards ? `schedule-event-compact ${densityClass}` : ""} ${event.bot === "Manager" ? "schedule-event-core" : ""} ${event.isActiveNow ? "is-active-now" : ""} ${isClippedStart ? "is-clipped-start" : ""} ${isClippedEnd ? "is-clipped-end" : ""}"
               style="top:${topPct}%;height:${Math.max(heightPct, 3.8)}%;width:${widthCalc};left:${leftCalc};"
               title="${escapeHtml(`${event.bot} · ${event.task} · ${timeLabel}`)}"
               data-schedule-event="${detailPayload}"

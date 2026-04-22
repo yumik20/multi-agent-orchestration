@@ -1,8 +1,8 @@
 # AGENTS.md
 
-# BehaviorGraph KMspace Constitution
+# enterprise AI Knowledge Workspace Constitution
 
-This file is the operating constitution for the local BehaviorGraph knowledge workspace.
+This file is the operating constitution for the local enterprise AI knowledge workspace.
 
 The goal is to maintain a durable markdown knowledge artifact that compounds in quality over time.
 

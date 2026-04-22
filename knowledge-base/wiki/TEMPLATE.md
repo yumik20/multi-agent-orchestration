@@ -9,7 +9,7 @@ canonical: true
 sources:
   - path/to/source
 tags:
-  - behaviorgraph
+  - enterprise-ai
 coverage_tags:
   - org-context
 related_pages:
@@ -26,7 +26,7 @@ One short paragraph answering what this page is about.
 
 ## Why It Matters
 
-Why this concept matters for BehaviorGraph, enterprise AI, or content strategy.
+Why this concept matters for Enterprise AI, enterprise AI, or content strategy.
 
 ## Main Claims
 
@@ -75,7 +75,7 @@ Why this concept matters for BehaviorGraph, enterprise AI, or content strategy.
 - `updated` — YYYY-MM-DD of last material edit (MUST be bumped on any non-cosmetic change)
 - `confidence` — `low` | `medium` | `high` (how well-sourced the page is)
 - `sources` — list of file paths to source docs backing this page (sources/ or raw/)
-- `tags` — freeform tags (e.g., `behaviorgraph`, `enterprise-ai`)
+- `tags` — freeform tags (e.g., `enterprise-ai`, `enterprise-ai`)
 
 **Optional but recommended (for lint + coverage tracking):**
 - `page_id` — short stable slug (kebab-case, e.g., `authority-routing`)

@@ -66,7 +66,7 @@ def _qualify_rows_with_gemini(rows: list[dict]) -> list[dict]:
         for i, r in enumerate(rows)
     ]
     prompt = (
-        "You decide whether each post is relevant to BehaviorGraph's themes:\n"
+        "You decide whether each post is relevant to enterprise AI's themes:\n"
         f"{SNS_BEHAVIORGRAPH_THEMES}\n\n"
         "Be loose — include anything that genuinely touches these themes, "
         "even tangentially. Exclude only clearly off-topic or pure hype with no substance.\n\n"
@@ -170,7 +170,7 @@ def _build_sns_email_body(summary: dict) -> str:
         lines.append(f"  • {source}: {counts['qualified']}q / {counts['unqualified']}uq (total {counts['total']})")
     lines += [
         "",
-        "Qualification: Gemini 2.0 Flash, loose relevance to BehaviorGraph themes",
+        "Qualification: Gemini 2.0 Flash, loose relevance to enterprise AI themes",
         "(enterprise AI agents, governance, org context, agent orchestration).",
         "",
         "Two CSVs attached: qualified.csv + unqualified.csv.",
@@ -209,6 +209,6 @@ def run_sns_qa_and_email() -> dict:
     state. Returns a summary dict; never raises so the wave always closes."""
     run_dt = datetime.now(LOCAL_TZ)
     run_date = run_dt.strftime("%Y-%m-%d")
-    matt_root = MARKETING_ROOT / "behaviorgraph" / "3_matt_intel_bot"
-    qualified_path = matt_root / f"sns-qualified-{run_date}.csv"
-    unqualified_path = matt_root / f"sns-unqualified-{run_date}.csv"
+    agent_root = MARKETING_ROOT / "project" / "intel_agent"
+    qualified_path = agent_root / f"sns-qualified-{run_date}.csv"
+    unqualified_path = agent_root / f"sns-unqualified-{run_date}.csv"

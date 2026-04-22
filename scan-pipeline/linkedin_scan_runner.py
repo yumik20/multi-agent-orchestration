@@ -8,13 +8,13 @@ def run_linkedin_scan_app(
 ) -> dict:
     run_dt = datetime.now(LOCAL_TZ)
     run_date = run_dt.strftime("%Y-%m-%d")
-    matt_root = MARKETING_ROOT / "behaviorgraph" / "3_matt_intel_bot"
+    agent_root = MARKETING_ROOT / "project" / "intel_agent"
     skill_root = WORKSPACE_ROOT / "skills" / "matt-linkedin-scan"
-    raw_path = matt_root / f"raw-linkedin-{run_date}.json"
-    report_path = matt_root / f"findings-linkedin-{run_date}.md"
-    csv_path = matt_root / f"linkedin-candidates-{run_date}.csv"
-    qa_path = matt_root / f"linkedin-qa-log-{run_date}.csv"
-    history_path = matt_root / "linkedin-seen-urls.json"
+    raw_path = agent_root / f"raw-linkedin-{run_date}.json"
+    report_path = agent_root / f"findings-linkedin-{run_date}.md"
+    csv_path = agent_root / f"linkedin-candidates-{run_date}.csv"
+    qa_path = agent_root / f"linkedin-qa-log-{run_date}.csv"
+    history_path = agent_root / "linkedin-seen-urls.json"
     queries_path = Path(query_file).expanduser() if query_file else skill_root / "references" / "search-queries.md"
     targets_path = skill_root / "references" / "targets.md"
     collector = skill_root / "scripts" / "collect_linkedin_activity_chrome.py"

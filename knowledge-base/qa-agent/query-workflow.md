@@ -1,6 +1,6 @@
 # Query Workflow
 
-Use this workflow whenever answering from the KMspace.
+Use this workflow whenever answering from the Knowledge Workspace.
 
 ## Answer Order
 
@@ -46,4 +46,4 @@ Write back if the answer:
 - unifies multiple existing pages
 - creates a reusable comparison or thesis framing
 - resolves a recurring ambiguity
-- should be reused by Tommy, Matt, or Meta7 later
+- should be reused by Tommy, Matt, or Manager later
