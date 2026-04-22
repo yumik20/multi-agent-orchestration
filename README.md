@@ -2,7 +2,7 @@
 
 Selected code samples from a multi-agent orchestration platform I built to run real marketing operations for my enterprise AI startup. The system coordinates 6 specialized AI agents that handle daily intelligence gathering, content creation, and operational monitoring. This is production software doing real work, not a research prototype.
 
-I also built the local dashboard app as a contribution to [OpenClaw](https://github.com/anthropics/openclaw). It helps operators track agent performance, manage costs across LLM providers, and supervise multi-agent workflows without constantly watching logs.
+I built the dashboard app to supervise my agents running on [OpenClaw](https://github.com/anthropics/openclaw) — tracking their performance, managing costs across LLM providers, and monitoring workflows without constantly watching logs. I'm also a contributor to the OpenClaw project itself ([#42974](https://github.com/openclaw/openclaw/issues/42974)).
 
 16,000+ lines of Python/JavaScript. Zero external dependencies.
 
@@ -53,6 +53,6 @@ Knowledge Base (Markdown + JSON)
 
 ## Context
 
-I built this system to run real marketing operations for my enterprise AI startup. The agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard was built as a contribution to OpenClaw, giving operators visibility into agent performance, LLM costs, and scheduling.
+I built this system to run real marketing operations for my enterprise AI startup. The agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard gives me visibility into agent performance, LLM costs, and scheduling so I can supervise the system efficiently.
 
 The knowledge base grew from a practical need: as agents collected hundreds of signals per week, I needed a structured way to qualify, promote, and maintain durable knowledge that both humans and AI could rely on. The design reflects ideas from my published research ("The Organizational Intelligence Loop") on how enterprise AI systems can maintain auditable organizational knowledge.
