@@ -1,87 +1,58 @@
-# Multi-Agent AI System — Code Samples
+# Multi-Agent AI System: Code Samples
 
-Selected code samples from a multi-agent orchestration platform I built to run real marketing operations for my enterprise AI startup. The system coordinates 6 specialized AI agents that handle daily intelligence gathering, content creation, and operational monitoring — this is production software doing real work, not a research prototype.
+Selected code samples from a multi-agent orchestration platform I built to run real marketing operations for my enterprise AI startup. The system coordinates 6 specialized AI agents that handle daily intelligence gathering, content creation, and operational monitoring. This is production software doing real work, not a research prototype.
 
-I also built the local dashboard app as a contribution to [OpenClaw](https://github.com/anthropics/openclaw) — it helps operators track agent performance, manage costs across LLM providers, and supervise multi-agent workflows without constantly watching logs.
+I also built the local dashboard app as a contribution to [OpenClaw](https://github.com/anthropics/openclaw). It helps operators track agent performance, manage costs across LLM providers, and supervise multi-agent workflows without constantly watching logs.
 
-**System overview:** 16,000+ lines of Python/JavaScript. Zero external dependencies. Manages agent scheduling, cross-platform data collection (LinkedIn, X, HN/Reddit, Substack), AI-powered qualification pipelines, real-time dashboard visualization, and a structured knowledge base with audit trails.
+16,000+ lines of Python/JavaScript. Zero external dependencies.
 
 ## Screenshots
 
-### Operational Dashboard — Weekly Schedule, Cost Tracking, Agent Status
+### Operational Dashboard
 ![Dashboard Overview](screenshots/dashboard-overview.png)
 
-The dashboard shows real-time agent status, weekly schedule calendar with time-positioned tasks, LLM cost tracking across providers, and scan app health monitoring. Built with vanilla JavaScript — no frameworks.
+Real-time agent status, weekly schedule calendar with time-positioned tasks, LLM cost tracking across providers, and scan app health monitoring. Built with vanilla JavaScript, no frameworks.
 
-### Agent Org Chart — Multi-Agent Hierarchy
+### Agent Org Chart
 ![Org Chart](screenshots/org-chart.png)
 
-Hierarchical view of the agent team: a manager agent coordinates 5 worker agents across two product teams. Each agent has a defined role, model assignment, and reporting structure.
+Hierarchical view of the agent team. A manager agent coordinates 5 worker agents across two product teams. Each agent has a defined role, model assignment, and reporting structure.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Dashboard (JS/CSS)                    │
-│   Weekly calendar · Org chart · Cost tracking · Chat     │
-├─────────────────────────────────────────────────────────┤
-│                  Orchestration Server (Python)            │
-│   Agent scheduling · Scan pipelines · Watchdogs          │
-├──────────┬──────────┬──────────┬──────────┬─────────────┤
-│ LinkedIn │    X     │ HN/Reddit│ Substack │   Events    │
-│  Scanner │ Scanner  │ Scanner  │ Scanner  │   Scanner   │
-├──────────┴──────────┴──────────┴──────────┴─────────────┤
-│              Knowledge Base (Markdown + JSON)             │
-│   Wiki · Evidence log · Qualification pipeline · Schemas │
-└─────────────────────────────────────────────────────────┘
+Dashboard (JS/CSS)
+  Weekly calendar, org chart, cost tracking, chat
+
+Orchestration Server (Python)
+  Agent scheduling, scan pipelines, watchdogs
+
+Scanners
+  LinkedIn | X | HN/Reddit | Substack | Events
+
+Knowledge Base (Markdown + JSON)
+  Wiki, evidence log, qualification pipeline, schemas
 ```
 
-## Code Samples
+## What's in Each Folder
 
-### 1. `agent-orchestration/` — Multi-Agent Scheduling & Watchdog System
+**`agent-orchestration/`** Scheduling engine that manages 6 AI agents with conflict-free time slots, stall detection, and graceful shutdown. Includes a subprocess wrapper with dual kill rules (absolute timeout + CSV-stall detection) that nudges agents to save partial work before force-killing.
 
-A scheduling engine that manages 6 AI agents with conflict-free time slots, stall detection, and graceful shutdown. Key features:
+**`knowledge-base/`** Markdown-first knowledge base with formal ingest, qualification, and promotion pipelines. Designed so both humans and LLMs can maintain it. Layered architecture: immutable sources, raw intake buffer, maintained wiki, durable outputs. Every incoming signal is explicitly accepted, rejected, or deferred with an audit trail.
 
-- **Schedule builder** — generates weekly calendars from agent configurations, detects time-slot overlaps, handles multi-day patterns
-- **Stall watchdog** — monitors running agent jobs via checkpoint files; nudges agents to save partial work after 5 minutes of inactivity, then force-kills after 7 minutes
-- **Scan orchestration** — subprocess wrapper with dual kill rules (absolute timeout + CSV-stall detection) for long-running data collection jobs
+**`dashboard-visualization/`** Single-page dashboard that visualizes agent activity, costs, and schedules. Weekly calendar with overlap-aware lane assignment and a live "Now" line. Tracks LLM token usage across OpenAI, Anthropic, and Google with monthly ledgers.
 
-### 2. `knowledge-base/` — Structured Knowledge Management System
-
-A markdown-first knowledge base with formal ingest, qualification, and promotion pipelines. Designed so both humans and LLMs can maintain it. Key features:
-
-- **Layered architecture** — immutable sources → raw intake buffer → maintained wiki → durable outputs
-- **Evidence tracking** — 34 evidence entries with provenance chains, confidence levels, and thesis mapping
-- **Qualification pipeline** — every piece of incoming data is explicitly accepted, rejected, or deferred with audit trail
-- **Schema-driven records** — formal templates for scan findings, qualification decisions, and wiki writebacks
-
-### 3. `dashboard-visualization/` — Real-Time Operational Dashboard
-
-A single-page dashboard that visualizes agent activity, costs, and schedules. No frameworks — vanilla JavaScript rendering engine. Key features:
-
-- **Weekly schedule calendar** — time-positioned task blocks with overlap-aware lane assignment and a live "Now" line
-- **Cost reconciliation** — tracks LLM token usage across providers (OpenAI, Anthropic, Google) with monthly ledgers
-- **Execution timeline** — maps expected vs. actual agent runs, surfaces missed/failed tasks
-
-### 4. `scan-pipeline/` — AI-Powered Data Collection & Qualification
-
-Cross-platform intelligence gathering with AI-powered quality filtering. Key features:
-
-- **Multi-source collector** — unified pipeline that normalizes data from LinkedIn, X, HN/Reddit, and Substack into a common schema
-- **Gemini AI quality filter** — uses LLM to evaluate and filter collected data against research-relevant criteria
-- **Chrome automation** — browser-based data collection with profile management and anti-throttling measures
+**`scan-pipeline/`** Cross-platform intelligence gathering with AI-powered quality filtering. Unified pipeline that normalizes data from LinkedIn, X, HN/Reddit, and Substack into a common schema. Uses Gemini for relevance filtering. Chrome automation with profile management and anti-throttling.
 
 ## Technical Choices
 
-- **Zero external dependencies** — the entire server runs on Python standard library only
-- **Markdown-first knowledge base** — diff-friendly, deterministic, works for both human and LLM consumption
-- **File-based state** — JSON state files instead of a database; simple, inspectable, portable
-- **AppleScript integration** — macOS-native email and browser automation for enterprise tooling
+- Zero external dependencies (Python standard library only)
+- Markdown-first knowledge base (diff-friendly, works for human and LLM consumption)
+- File-based state (JSON instead of database, simple and inspectable)
+- macOS-native integrations (AppleScript for email and browser automation)
 
 ## Context
 
-I built this system to run real marketing operations for my enterprise AI startup — the agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard app was built as a contribution to OpenClaw, giving operators visibility into agent performance, LLM costs, and scheduling without manual log-reading.
+I built this system to run real marketing operations for my enterprise AI startup. The agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard was built as a contribution to OpenClaw, giving operators visibility into agent performance, LLM costs, and scheduling.
 
-The knowledge base grew out of a practical need: as the agents collected hundreds of signals per week, I needed a structured way to qualify, promote, and maintain durable knowledge that both humans and AI agents could rely on. The design reflects ideas from my published research ("The Organizational Intelligence Loop") on how enterprise AI systems can maintain auditable organizational knowledge.
-
-The code demonstrates applied work in: agent orchestration, human-AI collaboration systems, NLP pipeline design, knowledge management, cost optimization, and operational monitoring.
+The knowledge base grew from a practical need: as agents collected hundreds of signals per week, I needed a structured way to qualify, promote, and maintain durable knowledge that both humans and AI could rely on. The design reflects ideas from my published research ("The Organizational Intelligence Loop") on how enterprise AI systems can maintain auditable organizational knowledge.
