@@ -51,6 +51,10 @@ Knowledge Base (Markdown + JSON)
 - File-based state (JSON instead of database, simple and inspectable)
 - macOS-native integrations (AppleScript for email and browser automation)
 
+## Related Writing
+
+[Designing an AI-Agent Marketing Team: What Actually Works](https://www.yumiwillems.com/post/designing-an-ai-agent-marketing-team-what-actually-works)
+
 ## Context
 
 I built this system to run real marketing operations for my enterprise AI startup. The agents scan LinkedIn, X, HN/Reddit, and Substack daily for market intelligence, generate content, and manage publishing workflows. The dashboard gives me visibility into agent performance, LLM costs, and scheduling so I can supervise the system efficiently.
