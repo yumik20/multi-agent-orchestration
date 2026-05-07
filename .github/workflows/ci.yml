@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run test suite
+        run: pytest tests/ -q
+
+      - name: Leakage scan
+        # Belt-and-suspenders against accidental PII / platform-name
+        # leaks slipping into a future commit. The list of forbidden
+        # tokens reflects this repo's "generic, no platform names"
+        # constraint; CI fails if any reappear.
+        run: |
+          ! grep -rEi --include='*.py' --include='*.md' --include='*.sh' --include='*.js' \
+              '\b(linkedin|substack|reddit|hacker.?news|twitter\.com|x\.com)\b' \
+              . 2>/dev/null
