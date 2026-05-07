@@ -90,7 +90,9 @@ def quality_filter_items(
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             response = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, json.JSONDecodeError) as exc:
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        # urlopen(timeout=) raises TimeoutError on Python 3.10+
+        # (not URLError), so include it explicitly.
         sys.stderr.write(f"  quality filter: call failed ({exc}) — passing through\n")
         return items_by_bucket, [{"error": str(exc)}]
 

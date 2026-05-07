@@ -171,7 +171,9 @@ def _qualify_rows_with_llm(rows: list[dict]) -> list[dict]:
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             response = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, json.JSONDecodeError) as exc:
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        # urlopen(timeout=) raises TimeoutError on Python 3.10+
+        # (not URLError), so include it explicitly.
         sys.stderr.write(f"  qa pipeline: call failed ({exc}) — keyword fallback\n")
         return _qualify_with_keyword_fallback(rows)
 
