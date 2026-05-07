@@ -39,7 +39,8 @@ def _parse_scan_state(path: Path) -> dict:
         return {}
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        sys.stderr.write(f"  qa pipeline: malformed scan state {path}: {exc}\n")
         return {}
 
 
@@ -83,7 +84,9 @@ def _collect_rows_for_qa() -> list[dict]:
                         "context": context[:400],
                         "raw": dict(row),
                     })
-        except Exception as exc:
+        except (OSError, ValueError) as exc:
+            # CSV read failure for one source — skip + continue with the
+            # others rather than aborting the whole qualification pass.
             sys.stderr.write(f"  qa pipeline: failed to read {csv_path}: {exc}\n")
     return unified
 
@@ -176,7 +179,9 @@ def _qualify_rows_with_llm(rows: list[dict]) -> list[dict]:
     try:
         parts = response.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         text_out = " ".join(p.get("text", "") for p in parts)
-    except Exception:
+    except (KeyError, IndexError, TypeError):
+        # Malformed response shape; text_out stays empty and the
+        # qualifier falls through to the keyword-overlap fallback.
         pass
 
     decisions = _parse_decisions(text_out)

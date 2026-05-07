@@ -10,6 +10,25 @@ Catches the failure mode where a long-running scanner (90 minutes)
 goes silent at minute 4 and would otherwise burn the full timeout
 window. The stall detector forces the kill into minute 5 instead.
 """
+from __future__ import annotations
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import NamedTuple
+
+
+class StallWatchdogResult(NamedTuple):
+    """Return value of run_collector_with_stall_watchdog. NamedTuple
+    supports both positional unpacking
+    (`rc, out, err, t, s = run_collector_with_stall_watchdog(...)`)
+    and named access (`result.timed_out`)."""
+    returncode: int
+    stdout: str
+    stderr: str
+    timed_out: bool
+    stall_killed: bool
 
 
 def run_collector_with_stall_watchdog(
@@ -19,7 +38,7 @@ def run_collector_with_stall_watchdog(
     stall_timeout_seconds: int,
     csv_path_hint: str | Path | None = None,
     poll_interval_seconds: float = 2.0,
-) -> tuple:
+) -> StallWatchdogResult:
     """Subprocess wrapper that enforces TWO kill rules:
 
       1. Absolute timeout — if the subprocess runs longer than
@@ -99,11 +118,27 @@ def run_collector_with_stall_watchdog(
     if timed_out or stall_killed:
         try:
             proc.kill()
-        except Exception:
+        except ProcessLookupError:
+            # Process already exited between poll() returning None and
+            # us calling kill(). Common race; safe to ignore.
             pass
+        except OSError as exc:
+            # Permission denied or other kernel-side kill failure. Log
+            # rather than silently swallow — the operator needs to see
+            # this when triaging "why did the scanner hang past the
+            # watchdog deadline?"
+            sys.stderr.write(
+                f"[watchdog] kill failed for pid={proc.pid}: {exc}\n"
+            )
         try:
             stdout, stderr = proc.communicate(timeout=5)
-        except Exception:
+        except subprocess.TimeoutExpired:
+            # Process didn't drain its pipes within 5s after kill. Drop
+            # whatever's already buffered; further waiting risks deadlock.
+            sys.stderr.write(
+                f"[watchdog] pid={proc.pid} did not drain after kill; "
+                f"stdout/stderr discarded\n"
+            )
             stdout, stderr = "", ""
     else:
         try:
@@ -114,7 +149,13 @@ def run_collector_with_stall_watchdog(
 
     if kill_reason:
         stderr = (stderr or "") + f"\n[watchdog] {kill_reason}"
-    return proc.returncode, stdout or "", stderr or "", timed_out, stall_killed
+    return StallWatchdogResult(
+        returncode=proc.returncode if proc.returncode is not None else -9,
+        stdout=stdout or "",
+        stderr=stderr or "",
+        timed_out=timed_out,
+        stall_killed=stall_killed,
+    )
 
 
 # ---------------------------------------------------------------------------

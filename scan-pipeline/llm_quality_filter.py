@@ -98,7 +98,9 @@ def quality_filter_items(
     try:
         parts = response.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         text_out = " ".join(p.get("text", "") for p in parts)
-    except Exception:
+    except (KeyError, IndexError, TypeError):
+        # Malformed response structure; text_out stays empty and the
+        # caller falls back to passing items through unfiltered.
         pass
 
     decisions = _parse_decisions(text_out)

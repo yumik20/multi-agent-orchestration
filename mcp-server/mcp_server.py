@@ -236,7 +236,10 @@ def qualify_results(csv_paths: list[str]) -> dict:
             else:
                 with open(csv_path, "r", encoding="utf-8", newline="") as fh:
                     rows_iter = list(csv.DictReader(fh))
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
+            # File read or JSON-shape failure for one source. Skip and
+            # let the others run — partial-success is better than total
+            # abort when one scanner produced a bad output file.
             sys.stderr.write(f"  qualify: error reading {csv_path}: {e}\n")
             continue
 
@@ -333,7 +336,9 @@ def generate_weekly_report() -> dict:
                     for row in csv.DictReader(fh):
                         row["scan_date"] = date_part
                         all_qualified.append(row)
-            except Exception:
+            except (OSError, ValueError):
+                # CSV read failure for one day's file — skip and roll up
+                # the rest. The weekly report tolerates partial sources.
                 continue
 
     # Dedup by URL across the week
