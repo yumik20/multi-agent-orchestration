@@ -1,3 +1,18 @@
+"""
+Scan-state manager: belt-and-suspenders cleanup of stuck scan state.
+
+If a scanner crashes between starting and writing its `done` marker,
+the state file stays flagged `running` forever and the dashboard shows
+a phantom in-flight scan. This module is the cron-side reaper that
+force-expires those entries, paired with the in-process subprocess
+timeout in stall_watchdog.
+
+EXCERPT — references `_parse_iso_to_epoch`, `notify_scan_result`,
+`SCAN_HARD_CEILING_SECONDS`, `_SCAN_EXPIRATION_GRACE_SECONDS` defined
+elsewhere in the production server.
+"""
+
+
 def _scan_state_is_in_flight(state: dict) -> bool:
     return str(state.get("status", "")).lower() in ("running", "queued", "in_progress", "pending")
 
@@ -8,7 +23,7 @@ def expire_stuck_scan_state(state: dict, saver, *, app_slug: str,
     failed and persist. Returns the (possibly updated) state dict. Safe to
     call with any state — returns unchanged if not expired.
 
-    Yumi's universal 30-min ceiling: regardless of what max_runtime_seconds
+    Universal 30-min ceiling: regardless of what max_runtime_seconds
     the caller passes, any scan older than SCAN_HARD_CEILING_SECONDS +
     grace is force-expired. This is the belt-and-suspenders layer behind
     the subprocess timeout.

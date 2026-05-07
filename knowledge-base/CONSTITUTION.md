@@ -1,8 +1,6 @@
-# AGENTS.md
+# Knowledge Workspace Constitution
 
-# enterprise AI Knowledge Workspace Constitution
-
-This file is the operating constitution for the local enterprise AI knowledge workspace.
+This file is the operating constitution for the local domain-knowledge workspace.
 
 The goal is to maintain a durable markdown knowledge artifact that compounds in quality over time.
 
@@ -17,7 +15,7 @@ This workspace governs:
 - durable writeback
 - linting and maintenance
 
-It does not govern day-to-day agent execution outside this `kmspace/` folder.
+It does not govern day-to-day agent execution outside this knowledge-base folder.
 
 ## Layer Semantics
 

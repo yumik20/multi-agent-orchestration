@@ -1,3 +1,17 @@
+"""
+Subprocess wrapper with dual kill rules:
+
+1. Absolute timeout — wall-clock limit on the whole run.
+2. Output-stall detector — if the subprocess hasn't written to its
+   output file for STALL_SECONDS, send SIGTERM with a brief grace
+   period for partial-work flushing, then SIGKILL.
+
+Catches the failure mode where a long-running scanner (90 minutes)
+goes silent at minute 4 and would otherwise burn the full timeout
+window. The stall detector forces the kill into minute 5 instead.
+"""
+
+
 def run_collector_with_stall_watchdog(
     cmd: list,
     *,

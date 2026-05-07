@@ -1,3 +1,14 @@
+"""
+Build the weekly schedule view: weekday slots, expected per-task
+durations, overlap-aware lane assignment for the calendar grid.
+
+EXCERPT — this module relies on helpers (`make_schedule_dt`,
+`schedule_slots_for_range`, `match_runs_to_slots`, `LOCAL_TZ`,
+`format_local_timestamp`) that live in the production server but
+aren't included in the public sample.
+"""
+
+
 def schedule_duration_minutes(bot: str, label: str) -> int:
     lowered = f"{bot} {label}".lower()
     if "workspace cleanup" in lowered:
@@ -10,7 +21,7 @@ def schedule_duration_minutes(bot: str, label: str) -> int:
         return 45
     if "publish" in lowered:
         return 60
-    if "x post" in lowered:
+    if "social post" in lowered or "thread post" in lowered:
         return 45
     if "intel" in lowered or "scan" in lowered:
         return 75

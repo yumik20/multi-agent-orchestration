@@ -9,9 +9,9 @@ canonical: true
 sources:
   - path/to/source
 tags:
-  - enterprise-ai
+  - domain-tag
 coverage_tags:
-  - org-context
+  - domain-context
 related_pages:
   - other-page.md
 evidence_count: 0
@@ -26,7 +26,7 @@ One short paragraph answering what this page is about.
 
 ## Why It Matters
 
-Why this concept matters for Enterprise AI, enterprise AI, or content strategy.
+Why this concept matters for the project's domain or downstream content strategy.
 
 ## Main Claims
 
@@ -75,7 +75,7 @@ Why this concept matters for Enterprise AI, enterprise AI, or content strategy.
 - `updated` — YYYY-MM-DD of last material edit (MUST be bumped on any non-cosmetic change)
 - `confidence` — `low` | `medium` | `high` (how well-sourced the page is)
 - `sources` — list of file paths to source docs backing this page (sources/ or raw/)
-- `tags` — freeform tags (e.g., `enterprise-ai`, `enterprise-ai`)
+- `tags` — freeform tags (e.g., `domain-tag-a`, `domain-tag-b`)
 
 **Optional but recommended (for lint + coverage tracking):**
 - `page_id` — short stable slug (kebab-case, e.g., `authority-routing`)
@@ -83,4 +83,4 @@ Why this concept matters for Enterprise AI, enterprise AI, or content strategy.
 - `coverage_tags` — which `wiki/index.md` coverage targets this page contributes to
 - `related_pages` — explicit cross-link list (lint will verify these files exist)
 - `evidence_count` — number of proof points (updated when Evidence section changes)
-- `last_lint_date` — YYYY-MM-DD when `kmspace-lint-heal` last validated this page
+- `last_lint_date` — YYYY-MM-DD when `lint-heal` last validated this page

@@ -1,33 +1,33 @@
-# enterprise AI Wiki — Index
+# Knowledge Base Wiki — Index
 
-This is the catalog of maintained knowledge pages. **Read this first.** Every wiki page should appear here under exactly one category. Pages not listed here are orphans — `kmspace-lint-heal` will flag them.
+This is the catalog of maintained knowledge pages. **Read this first.** Every wiki page should appear here under exactly one category. Pages not listed here are orphans — the lint-heal skill will flag them.
 
 ---
 
 ## Core Concepts
 
-The foundational thesis layer. What enterprise AI is and why it exists.
+The foundational thesis layer. The project's domain claims and why they hold.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
-| `thesis-map.md` | concept | medium | 2026-04-16 | Core thesis, top-level claim map (3 working claims, evidence-anchored, plus institutional validation layer) |
+| `thesis-map.md` | concept | medium | 2026-04-16 | Core thesis, top-level claim map (working claims with evidence anchors, institutional validation layer) |
 | `behavioral-context.md` | concept | — | — | Definition and explanatory core concept |
 
 ## Use Cases
 
-Canonical use-case families — what real problems enterprise AI solves.
+Canonical use-case families — what real problems the project's domain addresses.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
-| `use-cases.md` | use-case | medium | 2026-04-20 | Canonical use-case families + mapping (now includes adoption-friction patterns around delegated agent identity and dependency without context transfer) |
+| `use-cases.md` | use-case | medium | 2026-04-20 | Canonical use-case families + mapping |
 
 ## Evidence
 
-External proof points, practitioner quotes, market validators, litigation signals.
+External proof points, practitioner quotes, market validators.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
-| `evidence-log.md` | evidence | medium | 2026-04-21 | Reusable proof points (30 entries, now including Anthropic managed-agents evidence on runtime control infrastructure from 2026-04-21 morning findings) |
+| `evidence-log.md` | evidence | medium | 2026-04-21 | Reusable proof points (append-heavy log) |
 
 ## Guardrails
 
@@ -39,12 +39,12 @@ Approved language, constraints, competitive framing — safe-to-publish content 
 
 ## Allowlists
 
-Target filters used by scanners (Matt) and qualification (kmspace-ingest).
+Target filters used by scanners and qualification.
 
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
-| `allowlist-companies.md` | allowlist | high | 2026-04-15 | Tier 1-3 company targets (Snowflake added 2026-04-15 after governed-data partnership signal) |
-| `allowlist-job-titles.md` | allowlist | — | — | Role/title filters for qualification |
+| `allowlist-organizations.md` | allowlist | high | 2026-04-15 | Tier 1-3 organization targets |
+| `allowlist-roles.md` | allowlist | — | — | Role/title filters for qualification |
 
 ## Reference
 
@@ -53,42 +53,38 @@ Templates and schemas consumed by other pages + agents.
 | Page | Type | Confidence | Updated | Role |
 |---|---|---|---|---|
 | `TEMPLATE.md` | reference | — | — | Page-creation template + frontmatter schema |
-| `voice-models.md` | reference | high | 2026-04-12 | Voice rubric — Levie / Mollick / Grant; Tommy picks one per post |
+| `voice-models.md` | reference | high | 2026-04-12 | Voice rubric used by the creator skills when drafting |
 
 ---
 
 ## Coverage Targets
 
-The wiki should continuously improve coverage across these areas. `kmspace-ingest` promotes qualified findings to the pages that strengthen these targets. `kmspace-lint-heal` computes coverage per target weekly.
+The wiki should continuously improve coverage across these areas. The ingest skill promotes qualified findings to the pages that strengthen these targets. The lint-heal skill computes coverage per target weekly.
 
-- `org-context` — organizational behavioral context as a category
-- `informal-networks` — who-knows-whom signals invisible to org charts
+- `domain-context` — the project's behavioral context as a category
+- `informal-networks` — who-knows-whom signals invisible to formal org charts
 - `authority-routing` — who actually decides vs. who's titled
-- `decision-intelligence` — how enterprise decisions actually flow
-- `workforce-intelligence` — behavioral vs. analytical HR signals
-- `enterprise-ai-context-layer` — LEAD as the missing layer
-- `ai-governance-adjacency` — litigation, audits, governance pressure
-- `adoption-friction` — why AI pilots stall at 12 users, 95% failure rates
+- `decision-intelligence` — how decisions actually flow in the domain
+- `adoption-friction` — why pilots stall, where deployment loses momentum
 - `knowledge-loss` — SME departures, tribal knowledge, relationship context
-- `onboarding-gap` — new hires vs. invisible internal work
 
 ---
 
 ## Page Role Definitions
 
 - **concept** — foundational ideas that define the thesis. Stable, update carefully.
-- **use-case** — named scenario patterns for content + outreach. Grow these actively.
+- **use-case** — named scenario patterns. Grow these actively.
 - **evidence** — append-heavy collection of sourced proof points.
-- **guardrail** — rules for what to say / not say publicly. Update only with Yumi approval.
+- **guardrail** — rules for what to say / not say publicly. Update only with operator approval.
 - **allowlist** — scanner + qualification filter lists. Grow from qualified findings.
 - **reference** — schemas, templates, internal docs. Edit only when the format itself changes.
-- **lint-report** — generated weekly by `kmspace-lint-heal`, written to `../lint-heal/reports/`.
+- **lint-report** — generated weekly by the lint-heal skill, written to `../lint-heal/reports/`.
 
 ---
 
 ## Operations
 
-- **Ingest** — `skills/kmspace-ingest/SKILL.md` — promote qualified findings into these pages.
+- **Ingest** — `skills/ingest/SKILL.md` — promote qualified findings into these pages.
 - **Query** — `qa-agent/query-workflow.md` — answer from wiki first, use raw only for gaps.
-- **Lint** — `skills/kmspace-lint-heal/SKILL.md` — weekly Sunday 3 AM PT health check.
+- **Lint** — `skills/lint-heal/SKILL.md` — weekly health check.
 - **Change log** — `../log.md` — every ingest, angle, lint, and writeback is recorded there in `[YYYY-MM-DD HH:MM] event | title` format.

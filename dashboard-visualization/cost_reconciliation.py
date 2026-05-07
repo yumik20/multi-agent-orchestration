@@ -1,3 +1,16 @@
+"""
+Cost reconciliation: turn a per-call usage journal + manual prepaid
+ledger into per-month / per-bot / per-provider totals.
+
+EXCERPT — this file references symbols defined elsewhere in the
+production codebase (`pricing_for_model`, `calculated_cost_for_row`,
+`month_key_for_row`, `LOCAL_TZ`, `model_meta`, etc.) that aren't
+included in the public sample. The pattern shown is the reconciliation
+shape — pairing an auto-tracked usage stream (LLM API responses) with
+a manual prepaid-actuals stream — not a runnable script.
+"""
+
+
 def summarize_cost_journal(journal: dict, auto_ledger: dict | None = None) -> dict:
     auto_usage = (auto_ledger or {}).get("entries", [])
     manual_usage = journal.get("usage", [])

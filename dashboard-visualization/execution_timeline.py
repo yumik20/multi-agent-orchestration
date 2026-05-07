@@ -1,3 +1,15 @@
+"""
+Execution timeline: per-bot run history aggregated into a month view
+that the dashboard renders as a horizontal swimlane.
+
+EXCERPT — this file references helpers (`build_bot_runs`,
+`classify_progress_state`, `summarize_daily_issue`, etc.) defined
+elsewhere in the production server. The pattern shown is the
+shape of the per-bot day-bucket aggregation used by the dashboard's
+weekly schedule view.
+"""
+
+
 def build_execution_timeline(agents: list[dict], usage_ledger: dict, selected_month: str) -> dict:
     runs_by_bot = build_bot_runs()
     months = sorted({row.get("month", "") for row in usage_ledger.get("entries", []) if row.get("month")}, reverse=True)

@@ -46,4 +46,4 @@ Write back if the answer:
 - unifies multiple existing pages
 - creates a reusable comparison or thesis framing
 - resolves a recurring ambiguity
-- should be reused by Tommy, Matt, or Manager later
+- should be reused by another agent (creator, scanner, manager) later
