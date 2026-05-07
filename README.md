@@ -8,7 +8,18 @@ This repo is selected code from that system. It's not a framework you can instal
 
 The dashboard supervises agents running on the [OpenClaw](https://github.com/openclaw/openclaw) runtime: tracking performance, reconciling LLM costs across providers, and surfacing failure modes without me grepping logs. Production system is ~25,000 lines of Python and JavaScript. **No external Python packages** — Python stdlib + bash + AppleScript only. (HTTP calls to LLM provider APIs go through stdlib `urllib.request`; no `requests`, `anthropic`, `openai`, or `google-genai` packages anywhere.)
 
-The patterns here are tested (`pytest tests/ -q` runs 97 cases in under 200ms) and the design choices are documented in [`decisions/`](decisions/) as ADRs.
+The patterns here are tested (`pytest tests/ -q` runs 105 cases in under 200ms) and the design choices are documented in [`decisions/`](decisions/) as ADRs.
+
+### What this repo is and isn't
+
+It's a **curated subset (~1,500 lines)** chosen to demonstrate operational and system-design depth: MCP tool consolidation, the operator-rating eval loop, dual-kill watchdog, error-classifier-driven retries, source-of-truth markdown config, output-contract-before-LLM-spend. Things you can judge from this repo: how I think about failure modes, how I structure inter-skill state, how I trade off ergonomics vs. discipline, how I communicate design choices via ADRs.
+
+It is **not**:
+- A way to judge algorithmic depth — `assign_overlap_lanes` is a greedy first-fit, the calendar-UI standard. The depth here is operational, not algorithmic.
+- A way to judge large-codebase complexity management — the production system is ~25K lines with module-graph, SSE-update, and cron-orchestration concerns this excerpt doesn't fully expose.
+- A drop-in framework — names, paths, and source-types are sanitized; the production code is project-specific.
+
+The commit timeline on this repo reflects when I built the public sample (a few days), not when I designed the patterns (months of iteration). The ADRs in [`decisions/`](decisions/) are the receipts of that iteration — what failed, what was tried, what was kept, what I'd do differently.
 
 ## Architecture
 
