@@ -15,7 +15,7 @@ The first version was hardcoded in Python: a dict literal in the dashboard serve
 
 **Option B: YAML config file.** Standard format, parsers everywhere, clean structured nesting. The downside: humans don't read YAML well in PR diffs and especially don't notice subtle changes (a moved nesting level, a wrong sigil). YAML diffs make code review harder, not easier.
 
-**Option C: JSON config file.** Same shape as YAML, worse on whitespace/comments. Trades human-readability for one less dependency, which is a wash on a stdlib-only system.
+**Option C: JSON config file.** Same shape as YAML, worse on whitespace/comments. Trades human-readability for one less parser dependency, which is a wash on a stdlib-only system (both `json` and `yaml` are zero-add for the runtime).
 
 **Option D: Markdown table.** A single markdown file with a table per agent group. Each row is `| Bot | Role | Text Model | Image Model | Reports To |`. Operators read it directly; dashboards parse it; PR diffs are trivially scannable.
 

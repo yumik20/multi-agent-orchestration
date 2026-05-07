@@ -6,7 +6,7 @@ I run a small AI startup as a cofounder. To do that I built a multi-agent system
 
 This repo is selected code from that system. It's not a framework you can install. It's the load-bearing patterns I've kept iterating on for several months because they actually work in production.
 
-The dashboard supervises agents running on the [OpenClaw](https://github.com/openclaw/openclaw) runtime: tracking performance, reconciling LLM costs across providers, and surfacing failure modes without me grepping logs. Production system is ~25,000 lines of Python and JavaScript. Zero external runtime dependencies — Python stdlib + bash + AppleScript only.
+The dashboard supervises agents running on the [OpenClaw](https://github.com/openclaw/openclaw) runtime: tracking performance, reconciling LLM costs across providers, and surfacing failure modes without me grepping logs. Production system is ~25,000 lines of Python and JavaScript. **No external Python packages** — Python stdlib + bash + AppleScript only. (HTTP calls to LLM provider APIs go through stdlib `urllib.request`; no `requests`, `anthropic`, `openai`, or `google-genai` packages anywhere.)
 
 The patterns here are tested (`pytest tests/ -q` runs 97 cases in under 200ms) and the design choices are documented in [`decisions/`](decisions/) as ADRs.
 
@@ -165,7 +165,7 @@ Ordered roughly by operational impact:
 
 ## Technical Choices
 
-- Zero external runtime dependencies — Python stdlib + bash + AppleScript
+- No external Python packages (stdlib `urllib` for HTTP, `sqlite3` for state, `subprocess` for orchestration) + bash + AppleScript. **External services**: LLM provider APIs (Anthropic, OpenAI, Google) — called via stdlib, not via vendor SDKs.
 - Markdown-first config (diff-friendly, parseable by humans and LLMs both)
 - File-based state (JSON / JSONL / SQLite — inspectable, versionable, survives a process restart)
 - macOS-native integrations (AppleScript for email, launchd for scheduling)
