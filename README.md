@@ -1,10 +1,14 @@
 # Multi-Agent Orchestration: Code Samples
 
+[![CI](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml)
+
 I run a small AI startup as a solo founder. To do that I built a multi-agent system that handles the work I'd otherwise need a marketing analyst, a content lead, and an operations manager for: daily intelligence gathering, content drafting, publishing, and operational monitoring. Six specialized agents, ~46 skills, ~22 scheduled jobs, running on my laptop every day.
 
 This repo is selected code from that system. It's not a framework you can install. It's the load-bearing patterns I've kept iterating on for several months because they actually work in production.
 
 The dashboard supervises agents running on the [OpenClaw](https://github.com/openclaw/openclaw) runtime: tracking performance, reconciling LLM costs across providers, and surfacing failure modes without me grepping logs. Production system is ~25,000 lines of Python and JavaScript. Zero external runtime dependencies — Python stdlib + bash + AppleScript only.
+
+The patterns here are tested (`pytest tests/ -q` runs 97 cases in under 200ms) and the design choices are documented in [`decisions/`](decisions/) as ADRs.
 
 ## Architecture
 
@@ -54,20 +58,29 @@ The lesson I keep applying since: **when five things look 80% the same, the 80% 
 
 ## Operator-driven skill eval
 
-Six weeks in, I had 22 scheduled jobs running daily and no honest signal on which ones were producing useful output. Engineering observability — exit codes, runtime, token counts — said all 22 were "healthy." But three of them were quietly producing junk emails I'd skim and delete. The system was running; the system wasn't working.
+Six weeks in, I had 22 scheduled jobs running daily and no honest signal on which ones were producing useful output. Engineering observability — exit codes, runtime, token counts — said all 22 were "healthy." Three of them were quietly producing junk emails I'd skim and delete. The system was running; the system wasn't working.
 
 Self-grading wasn't an option. Every "did the agent do its job?" prompt I tried got a confident yes, including on the runs that produced obvious garbage. The model can't see what good looks like in my domain.
 
-So I built a rating loop where I'm the judge:
+I started thinking about the design less like software eval (sample, aggregate, threshold) and more like how a Japanese senior would supervise a junior employee — the **報告・連絡・相談 (hou-ren-sou)** rhythm of daily report / inform / consult, plus a weekly **振り返り (furikaeri)** retrospective. The mental model maps surprisingly cleanly to what an agent system actually needs:
 
-1. **Every skill execution writes to `runs.jsonl`** — a single append-only log shared across all skills. The `run_tracker.py` helper handles `start_run` / `finish_run` with millisecond-precision job IDs.
+- **報告 (hou — daily report)** → every job logs to `runs.jsonl`. Nothing is invisible.
+- **連絡 (ren — daily inform)** → 18:00 chat message lists today's runs + carryovers. The operator (me) sees every item, not a sampled subset.
+- **相談 (sou — daily consult)** → optional notes per rating capture what I wanted differently. The owner agent reads these into next-week's revisions.
+- **振り返り (furikaeri — weekly retrospective)** → Sunday memo aggregates `(skill, platform)` performance, surfaces the bottom of the list, and proposes specific corrective edits to the underlying SKILL.md files.
+
+Concretely, the loop:
+
+1. **Every skill execution writes to `runs.jsonl`** — a single append-only log shared across all skills. `run_tracker.py` handles `start_run` / `finish_run` with millisecond-precision job IDs.
 2. **Each evening at 18:00, an agent computes the unrated set** — today's runs plus any carryovers from previous days. A bundled scan that hits 4 sources fans out into 4 rateable items (so I can spot "scanner is great on source-a, useless on source-c" instead of one averaged number that hides the per-source signal).
 3. **It sends one chat message per item with an inline 1-5 star keyboard.** I tap stars during dinner. The whole rating session takes 30 seconds. There are no per-rating confirmations — clicks are acknowledged silently — and no free-text prompts. Friction is the whole problem.
-4. **Sunday at 19:00, a weekly memo aggregates** ratings by `(skill, platform)`, surfaces buckets below 3.0★, and emails me a digest with the worst performers and the operator notes I left on them.
+4. **Sunday at 19:00, a weekly memo aggregates** ratings by `(skill, platform)`, surfaces buckets below 3.0★, and emails me a digest with the worst performers and the notes I left on them.
 
-A subtlety that matters: the run record carries an `extra.model_actual` field — which model *actually* ran, not which model is configured. When the primary endpoint times out and the fallback dispatcher quietly routes the run to a backup model, that fact lands in the log. The weekly memo then answers a question I couldn't answer before: "did the publishing skill's quality dip because the skill broke, or because the primary model endpoint was down?" Different fixes; different ownership.
+The Japanese-management framing also shapes one specific design choice: **every job must be rated.** Unrated jobs roll forward to tomorrow's standup. There is no "skip this one" — same as how a junior's work is reviewed item by item in their manager's 1:1, not via a sampled dashboard. Carryover discipline is the value.
 
-This loop is the most operationally useful thing I've built. It catches what every other layer of monitoring misses.
+A subtlety that matters operationally: the run record carries an `extra.model_actual` field — which model *actually* executed, not which model is configured. When the primary endpoint times out and the fallback dispatcher quietly routes the run to a backup model, that fact lands in the log. The weekly memo then answers a question I couldn't answer before: "did the publishing skill's quality dip because the skill broke, or because the primary model endpoint was down?" Different fixes; different ownership.
+
+This loop is the most operationally useful thing I've built. It catches what every other layer of monitoring misses, and the design rationale is documented in detail in [ADR-002](decisions/002-operator-rating-over-llm-self-eval.md).
 
 ## Agent skills inventory (selected)
 
@@ -130,6 +143,12 @@ The compounding effect of all four (dedup-aware batching, prompt cache, URL gate
 **`dashboard-visualization/`** Single-page dashboard with weekly calendar (overlap-aware lane assignment, live "Now" line), per-provider cost reconciliation, execution timeline with agent run history.
 
 **`knowledge-base/`** Markdown-first KB with formal ingest, qualification, and promotion pipelines. Layered architecture: immutable `sources/` → `raw/` intake → maintained `wiki/` → durable `output/`. Every signal explicitly accepted, rejected, or deferred with an audit trail.
+
+**`error-handling/`** Two files: `error_classifier.py` categorizes LLM exceptions into network / timeout / rate_limit / auth / model / parse / unknown, with deterministic retry decisions per category. `retry_with_backoff.py` is the helper that applies them — exponential backoff with jitter, max-retries per category, fail-fast on auth and model errors (retry doesn't help). Replaces the typical "try 3 times with a fixed sleep" pattern with one that doesn't waste API calls on auth errors.
+
+**`decisions/`** Five Architecture Decision Records covering the major design choices that weren't obvious: MCP over a shared library, operator rating over LLM self-eval, SQLite over JSON for dedup, dual-kill watchdog over a single timeout, markdown table config over YAML. Each ADR captures the actual production iteration that drove the decision — what failed, what was tried, what was kept.
+
+**`tests/`** Pytest suite covering the load-bearing logic in `quality-gates/`, `cost-optimization/`, `skill-rating-eval/`, `agent-orchestration/`, and `error-handling/`. 97 cases, runs in under 200ms. CI workflow at `.github/workflows/ci.yml` runs on every push + a leakage-scan grep that fails the build if a forbidden token (platform name, agent name, etc.) sneaks back in.
 
 ## Engineering patterns demonstrated
 
