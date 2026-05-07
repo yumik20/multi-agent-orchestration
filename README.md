@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml)
 
-I run a small AI startup as a solo founder. To do that I built a multi-agent system that handles the work I'd otherwise need a marketing analyst, a content lead, and an operations manager for: daily intelligence gathering, content drafting, publishing, and operational monitoring. Six specialized agents, ~46 skills, ~22 scheduled jobs, running on my laptop every day.
+I run a small AI startup as a cofounder. To do that I built a multi-agent system that handles the work I'd otherwise need a marketing analyst, a content lead, and an operations manager for: daily intelligence gathering, content drafting, publishing, and operational monitoring. Six specialized agents, ~46 skills, ~22 scheduled jobs, running on my laptop every day.
 
 This repo is selected code from that system. It's not a framework you can install. It's the load-bearing patterns I've kept iterating on for several months because they actually work in production.
 
