@@ -21,6 +21,18 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
+
+
+class RatingRecord(TypedDict):
+    """One JSONL line in ratings.jsonl. Append-only on-disk shape."""
+    job_id: str
+    skill: str
+    platform: str            # "" if the run didn't declare platforms
+    rating: int              # 1..5
+    note: str
+    rated_at: str            # ISO timestamp
+
 
 ROOT = Path(__file__).resolve().parent
 RUNS_DIR = ROOT / "runs"
@@ -174,7 +186,7 @@ def main():
                             "platform": platform or None})
             continue
 
-        record = {
+        record: RatingRecord = {
             "job_id": job_id,
             "skill": runs[job_id].get("skill", ""),
             "platform": platform,

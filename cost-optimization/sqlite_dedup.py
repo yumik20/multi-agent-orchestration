@@ -17,8 +17,18 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import NamedTuple
 
 DEFAULT_WINDOW_DAYS = 30
+
+
+class UrlPartition(NamedTuple):
+    """Result of UrlDedup.partition(). Three named fields plus positional
+    unpacking (NamedTuples support both `result.seen` and
+    `seen, new, meta = partition(urls)` style)."""
+    seen: list[str]
+    new: list[str]
+    metadata: dict[str, dict]   # {url: {"platform": str, "qualified": bool}}
 
 
 class UrlDedup:
@@ -90,12 +100,15 @@ class UrlDedup:
             "window_days": self.window_days,
         }
 
-    def partition(self, urls: list[str]) -> tuple[list[str], list[str], dict[str, dict]]:
-        """Split urls into (seen, new, seen_metadata).
+    def partition(self, urls: list[str]) -> UrlPartition:
+        """Split urls into (seen, new, metadata).
 
-        seen_metadata maps each seen url to {platform, qualified}, so
-        callers can decide whether to re-qualify a previously-rejected
-        URL when the qualify rules have changed.
+        metadata maps each seen url to {platform, qualified}, so callers
+        can decide whether to re-qualify a previously-rejected URL when
+        the qualify rules have changed. Returns a NamedTuple so callers
+        can use either positional unpacking
+        (`seen, new, meta = d.partition(urls)`) or named access
+        (`d.partition(urls).metadata`).
         """
         seen, new, meta = [], [], {}
         for url in urls:
@@ -111,7 +124,7 @@ class UrlDedup:
                 meta[url] = {"platform": row[0], "qualified": bool(row[1])}
             else:
                 new.append(url)
-        return seen, new, meta
+        return UrlPartition(seen=seen, new=new, metadata=meta)
 
     def close(self):
         self._db.close()

@@ -49,7 +49,39 @@ import secrets
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
+
+
+class RunHandle(TypedDict):
+    """In-memory run state returned by start_run() and consumed by
+    finish_run(). Not the on-disk record (see RunRecord)."""
+    job_id: str
+    skill: str
+    mcps_used: list[str]
+    platforms: list[str]
+    trigger: str
+    started: str
+    _started_monotonic: float
+    extra: dict[str, Any]
+
+
+class RunRecord(TypedDict):
+    """One JSONL line in runs.jsonl. The append-only on-disk shape that
+    the eval pipeline reads."""
+    job_id: str
+    skill: str
+    mcps_used: list[str]
+    platforms: list[str]
+    trigger: str
+    started: str
+    finished: str
+    duration_s: float
+    artifacts: list[str]
+    row_count: int | None
+    status: str
+    error: str | None
+    extra: dict[str, Any]
+
 
 ROOT = Path(__file__).parent
 RUNS_DIR = ROOT / "runs"
@@ -86,8 +118,8 @@ def start_run(
     mcps_used: list[str] | None = None,
     platforms: list[str] | None = None,
     extra: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Begin a run. Returns an opaque dict you must pass to finish_run.
+) -> RunHandle:
+    """Begin a run. Returns a RunHandle you must pass to finish_run.
 
     `platforms`: optional list of sub-units the operator should rate
     separately. A morning scan that hits four sources in parallel
@@ -98,20 +130,20 @@ def start_run(
     # 4-hex suffix breaks ties when two runs of the same skill start
     # in the same millisecond (smoke tests do this; cron rarely will).
     job_id = f"{skill}@{_iso_ms(started)}-{secrets.token_hex(2)}"
-    return {
-        "job_id": job_id,
-        "skill": skill,
-        "mcps_used": list(mcps_used or []),
-        "platforms": list(platforms or []),
-        "trigger": trigger,
-        "started": _iso(started),
-        "_started_monotonic": time.monotonic(),
-        "extra": dict(extra or {}),
-    }
+    return RunHandle(
+        job_id=job_id,
+        skill=skill,
+        mcps_used=list(mcps_used or []),
+        platforms=list(platforms or []),
+        trigger=trigger,
+        started=_iso(started),
+        _started_monotonic=time.monotonic(),
+        extra=dict(extra or {}),
+    )
 
 
 def finish_run(
-    run: dict[str, Any],
+    run: RunHandle,
     status: str = "success",
     artifacts: list[str] | None = None,
     row_count: int | None = None,
@@ -121,7 +153,7 @@ def finish_run(
     """Append the finished run to today's runs.jsonl. Returns the path."""
     finished = _now()
     duration = round(time.monotonic() - run["_started_monotonic"], 2)
-    record = {
+    record: RunRecord = {
         "job_id": run["job_id"],
         "skill": run["skill"],
         "mcps_used": run["mcps_used"],

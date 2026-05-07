@@ -34,7 +34,15 @@ Usage:
 from __future__ import annotations
 
 import re
-from typing import Callable
+from typing import Callable, NamedTuple
+
+
+class PartitionResult(NamedTuple):
+    """Return value of drop_unverified(). NamedTuple supports both
+    positional unpack (`kept, dropped = drop_unverified(...)`) and
+    named access (`result.kept`)."""
+    kept: list[dict]
+    dropped: list[dict]   # each dict has a `_drop_reason` field added
 
 # ── URL validators ─────────────────────────────────────────────────────────
 
@@ -115,7 +123,7 @@ def drop_unverified(
     url_field: str = "url",
     date_field: str | None = None,
     url_validator: Callable[[str], bool] | None = None,
-) -> tuple[list[dict], list[dict]]:
+) -> PartitionResult:
     """Partition rows into (kept, dropped). A row is dropped if its URL
     doesn't pass `url_validator` (or `is_url_with_path` if none given)
     or if `date_field` is provided but the row's date is unverified."""
@@ -130,4 +138,4 @@ def drop_unverified(
                 dropped.append({**row, "_drop_reason": "date_invalid"})
                 continue
         kept.append(row)
-    return kept, dropped
+    return PartitionResult(kept=kept, dropped=dropped)
