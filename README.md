@@ -109,6 +109,22 @@ The system runs ~46 skills across 6 agents. Each skill is a `SKILL.md` file the 
 
 Three things worth noting. **Most "manager" jobs run on Haiku, not Sonnet.** Sonnet is reserved for the weekly strategy review where actual judgment is needed. Daily checkups are template-shaped; cheap models suffice and the difference compounds across 5×/week. **Two skills run with no LLM at all.** The weekly skill-rating memo and the wiki lint report are pure Python aggregation. There's no model in the world that joins JSONL files better than `csv.DictReader`. **Scanners share an MCP.** Four scanners all call `scan-pipeline`'s tools. That's why the consolidation paid off.
 
+## Product-design choices
+
+Engineering depth alone doesn't make a multi-agent system usable by an operator. The patterns below are the ones I made about *how the operator interacts with the system*. Most aren't visible in the code samples; they live in status taxonomies, channel rules, what the run record carries, when to send an email vs. silence.
+
+| Pattern | Summary |
+|---|---|
+| [Show, don't decide](product-design/show-dont-decide.md) | Surface problems to the operator. Don't auto-fix. Capability drift, model-fallback events, weekly memo proposals: all reported, none silently corrected. |
+| [Friction as feature](product-design/friction-as-feature.md) | Every job must be rated. Silence is never approval. Issue dismissal is manual. Friction goes where mistakes compound. |
+| [Status taxonomy](product-design/status-taxonomy.md) | 8 categories (Running, Scheduled, Completed, Idle, Blocked, Error, Stale, Unknown), not binary ok/fail. The Idle/Stale and Blocked/Error pairs alone are worth the granularity. |
+| [Channel-choice rule](product-design/channel-choice-rule.md) | Chat for synchronous (approvals, alerts). Email for asynchronous (digests, reports). Dashboard for status. File-state for audit. Mixing them wastes attention. |
+| [Cost reconciliation UX](product-design/cost-reconciliation.md) | Three numbers (estimated, prepaid consumed, reconciled) plus variance, hero-level. Calibration UI, not a billing system. |
+| [Usage classification](product-design/usage-classification.md) | `usage: cron / manual / subprocess / chained / emergency / deprecated` as a queryable manifest field on every skill. |
+| [Lifecycle + retention](product-design/lifecycle-and-retention.md) | Three retention layers (mechanical, curated, deprecation-not-deletion). Nothing disappears. Things age explicitly. |
+
+The meta-pattern: a lot of these are the opposite of what an engineer would naturally choose. Engineers optimize for fewer steps, automatic resolution, fewer confirmations. Operators want to know what's happening and decide what to do about it. Each tradeoff trades engineering efficiency for operator clarity.
+
 ## Cost-optimization receipts
 
 Numbers I can back up from running this in production.
