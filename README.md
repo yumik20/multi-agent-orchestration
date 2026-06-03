@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml)
 
-I run an AI startup as a cofounder. To do that I built a production multi-agent system that handles daily intelligence gathering, content creation, publishing, contact intelligence, lead generation, and operational monitoring. Six specialized agents, 51 skills, 4 MCP servers (25 tools), 22 scheduled cron jobs, 17 launchd daemons, all running autonomously on a single MacBook.
+I run an AI startup as a cofounder. I built a production multi-agent system for daily intelligence gathering, content creation, publishing, contact intelligence, lead generation, and operational monitoring. It runs six specialized agents, 51 skills, 4 MCP servers with 25 tools, 22 scheduled cron jobs, and 17 launchd daemons on a single MacBook.
 
-This repo is a curated subset (~1,500 lines). Production is ~25,000 lines of Python and JavaScript. **No external Python packages** (stdlib `urllib` for HTTP, `sqlite3` for state, `subprocess` for orchestration), plus bash and AppleScript. External services: Anthropic, OpenAI, Google LLM APIs, called via stdlib rather than vendor SDKs. Tests pass (`pytest tests/ -q` runs 105 cases in under 200ms). Design choices are documented in [`decisions/`](decisions/) as ADRs.
+This repo is a curated subset, about 1,500 lines. Production is about 25,000 lines of Python and JavaScript. **No external Python packages**. It uses stdlib `urllib` for HTTP, `sqlite3` for state, and `subprocess` for orchestration, plus bash and AppleScript. External services are Anthropic, OpenAI, and Google LLM APIs, called through stdlib instead of vendor SDKs. Tests pass: `pytest tests/ -q` runs 105 cases in under 200ms. Design choices are documented in [`decisions/`](decisions/) as ADRs.
 
 ### Current system scale (June 2026)
 
@@ -24,9 +24,9 @@ This repo is a curated subset (~1,500 lines). Production is ~25,000 lines of Pyt
 
 ### What this repo demonstrates, and what it doesn't
 
-It demonstrates operational and system-design depth: MCP tool consolidation across 4 servers, the operator rating eval loop (hou-ren-sou inspired), dual-kill watchdog, error-classifier-driven retries, source-of-truth markdown config, output-contract-before-LLM-spend, SQLite session indexing that replaced a 16GB in-memory cache, launchd log evidence for schedule classification, and a schema caching layer for API discovery.
+It demonstrates operational and system-design depth: MCP tool consolidation across 4 servers, the operator rating eval loop inspired by hou-ren-sou, dual-kill watchdog, error-classifier-driven retries, markdown config as source of truth, output contracts before LLM spend, SQLite session indexing that replaced a 16GB in-memory cache, launchd log evidence for schedule classification, and a schema caching layer for API discovery.
 
-It does not demonstrate algorithmic depth (`assign_overlap_lanes` is a greedy first-fit, the calendar-UI standard) or large-codebase complexity management (the production system has module-graph, SSE-update, and cron-orchestration concerns this excerpt doesn't fully expose). It is not a deployable framework; names, paths, and source-types are sanitized.
+It does not demonstrate algorithmic depth. `assign_overlap_lanes` is a greedy first-fit, the calendar-UI standard. It also does not show the full production system's module-graph, SSE-update, and cron-orchestration concerns. It is not a deployable framework. Names, paths, and source types are sanitized.
 
 The commit timeline reflects when I built the public sample, not when the patterns were designed. The ADRs in [`decisions/`](decisions/) are the iteration receipts.
 
@@ -87,44 +87,44 @@ The commit timeline reflects when I built the public sample, not when the patter
 
 ## Why an MCP server?
 
-Month 1, every scanner skill had its own copy of the same loop: read raw scan output, drop URLs seen in the last 30 days, qualify against thesis, write CSV, email. The four JSON dedup files drifted; Tuesday's scan re-qualified URLs Monday's scan had already rejected. The fix was a one-line edit, but I had to make it five times in five places, and I kept missing one.
+Month 1, every scanner skill had its own copy of the same loop: read raw scan output, drop URLs seen in the last 30 days, qualify against thesis, write CSV, email. The four JSON dedup files drifted. Tuesday's scan re-qualified URLs Monday's scan had already rejected. A one-line fix had to be made five times, and I kept missing one.
 
-I pulled the loop into an MCP server with seven tools (`run_scan`, `qualify`, `smart_dedup`, `weekly_report`, `cleanup`, `scan_status`, `send_email`). Each scanner went from ~50 lines of duplicated qualify-loop code to ~3 lines calling the MCP. Four JSON dedup caches became one SQLite table queryable cross-skill.
+I pulled the loop into an MCP server with seven tools: `run_scan`, `qualify`, `smart_dedup`, `weekly_report`, `cleanup`, `scan_status`, `send_email`. Each scanner went from about 50 lines of duplicated qualify-loop code to about 3 lines calling the MCP. Four JSON dedup caches became one SQLite table queryable across skills.
 
-That first MCP solved the scan problem. Then the same pattern applied everywhere else:
+That first MCP solved the scan problem. The same pattern then applied elsewhere:
 
 - **web-intel** (9 tools): platform detection, anti-bot strategy recommendation, embedded data extraction (Next.js/Redux/GraphQL hydration), headless Chrome with HAR capture, API discovery with schema caching, GraphQL introspection, cookie persistence. 23 of 25 tools run 100% locally with zero API cost.
 - **contact-intel** (4 tools): recurring host tracking across calendar events (fuzzy-matched by title similarity), company signal detection (2+ people from same company at different events), email inbox scanning for LinkedIn URLs (reads raw MIME source via AppleScript), event history recall.
-- **lead-search** (5 tools): offline cross-reference of 9,347 LinkedIn connections + a 509-person industry map. `first_degree(name)` checks if someone is already connected. `connections_at(company)` finds warm intro paths. `map_brokers()` identifies super-connectors. `gemini_enrich(items, prompt)` runs any research question through Gemini with Google Search grounding, prompt written by the agent at runtime (no code changes between M&A/customer/hire/press searches). `warm_path_check` batches all of the above for a company list.
+- **lead-search** (5 tools): offline cross-reference of 9,347 LinkedIn connections + a 509-person industry map. `first_degree(name)` checks if someone is already connected. `connections_at(company)` finds warm intro paths. `map_brokers()` identifies super-connectors. `gemini_enrich(items, prompt)` runs any research question through Gemini with Google Search grounding, with the agent writing the prompt at runtime. No code changes between M&A, customer, hire, and press searches. `warm_path_check` batches all of the above for a company list.
 
-I picked MCP over a Python library because my skills don't all live in the same runtime. Some are pure Python. Some are bash-orchestrated. Some are LLM-orchestrated and only "call code" by exec-ing a subprocess. Stdio MCP is the cross-runtime contract that works for all three.
+I picked MCP over a Python library because my skills do not all live in the same runtime. Some are pure Python. Some are bash-orchestrated. Some are LLM-orchestrated and only call code by exec-ing a subprocess. Stdio MCP is the cross-runtime contract that works for all three.
 
 Lesson: **when five things look 80% the same, the 80% is infrastructure, not workflow.**
 
 ## Operator-driven skill eval
 
-Six weeks in, I had 22 scheduled jobs running daily and no honest signal on which were producing useful output. Engineering observability said all 22 were "healthy" by exit code, runtime, and token count. Three were quietly producing junk emails I'd skim and delete. The system was running. The system wasn't working.
+Six weeks in, I had 22 scheduled jobs running daily and no honest signal on which were producing useful output. Engineering observability said all 22 were healthy by exit code, runtime, and token count. Three were quietly producing junk emails I would skim and delete. The system was running. The system was not working.
 
-Self-grading wasn't an option. Every "did the agent do its job?" prompt got a confident yes, including on runs that produced obvious garbage. The model can't see what good looks like in my domain.
+Self-grading was not an option. Every "did the agent do its job?" prompt got a confident yes, including on runs that produced obvious garbage. The model cannot see what good looks like in my domain.
 
-I started thinking about the design less like software eval (sample, aggregate, threshold) and more like how a Japanese senior would supervise a junior. The **報告・連絡・相談 (hou-ren-sou)** rhythm of daily report, inform, consult, plus a weekly **振り返り (furikaeri)** retrospective. Maps cleanly to what an agent system actually needs:
+I started thinking about the design less like software eval, sample, aggregate, threshold, and more like how a Japanese senior would supervise a junior. The **報告・連絡・相談 (hou-ren-sou)** rhythm of daily report, inform, consult, plus a weekly **振り返り (furikaeri)** retrospective, maps cleanly to what an agent system needs:
 
 - **報告** (daily report): every job logs to `runs.jsonl`. Nothing is invisible.
 - **連絡** (daily inform): 18:00 chat message lists today's runs plus carryovers.
 - **相談** (daily consult): optional notes per rating capture what I wanted differently.
 - **振り返り** (weekly retrospective): Sunday memo aggregates by `(skill, platform)`, surfaces buckets below 3.0★, proposes corrective edits.
 
-Each evening at 18:00, an agent computes the unrated set and sends one chat message per item with an inline 1-5 star keyboard. I tap stars during dinner. 30 seconds. No per-rating confirmations (clicks acknowledged silently), no free-text prompts. **Every job must be rated.** Unrated items roll forward; same as how a junior's work is reviewed item by item, not via a sampled dashboard.
+Each evening at 18:00, an agent computes the unrated set and sends one chat message per item with an inline 1-5 star keyboard. I tap stars during dinner. 30 seconds. No per-rating confirmations, no free-text prompts. Clicks are acknowledged silently. **Every job must be rated.** Unrated items roll forward, the way a junior's work is reviewed item by item, not via a sampled dashboard.
 
-A bundled scan that hits 4 sources fans out into 4 rateable items, so I can spot "scanner is great on source-a, useless on source-c" instead of one averaged number.
+A bundled scan that hits 4 sources fans out into 4 rateable items, so I can spot "scanner is great on source-a, useless on source-c" instead of seeing one averaged number.
 
-The run record carries an `extra.model_actual` field: which model *actually* executed, not which was configured. When the primary endpoint times out and the fallback dispatcher routes to a backup, that fact lands in the log. The weekly memo can answer "did the publishing skill's quality dip because the skill broke, or because the primary endpoint was down?" Different fixes, different ownership.
+The run record carries an `extra.model_actual` field: which model *actually* executed, not which was configured. When the primary endpoint times out and the fallback dispatcher routes to a backup, that fact lands in the log. The weekly memo can answer "did the publishing skill's quality dip because the skill broke, or because the primary endpoint was down?" Different causes, different owners.
 
 Full rationale in [ADR-002](decisions/002-operator-rating-over-llm-self-eval.md).
 
 ## Agent skills inventory (selected)
 
-The system runs ~46 skills across 6 agents. Each skill is a `SKILL.md` file the runtime parses (frontmatter declares model, MCPs, trigger phrases) plus an optional `scripts/` directory.
+The system runs about 46 skills across 6 agents. Each skill is a `SKILL.md` file the runtime parses. Frontmatter declares model, MCPs, and trigger phrases. A skill can also include a `scripts/` directory.
 
 | Skill | Role | When | MCPs | Model |
 |---|---|---|---|---|
@@ -147,11 +147,11 @@ The system runs ~46 skills across 6 agents. Each skill is a `SKILL.md` file the 
 | `kb-daily-ingest` | promote findings to wiki | Mon-Sat 10:30 | none | haiku |
 | `kb-weekly-lint` | wiki coverage report | Sun 03:00 | none | (no LLM) |
 
-Three patterns from this table: most "manager" jobs run on Haiku, not Sonnet (Sonnet is reserved for weekly strategy where actual judgment is needed); two skills run with no LLM at all (the weekly memo and lint report are pure Python aggregation); four scanners share one MCP (which is why the consolidation paid off).
+Three patterns stand out: most manager jobs run on Haiku, not Sonnet. Sonnet is reserved for weekly strategy, where actual judgment is needed. Two skills run with no LLM at all. The weekly memo and lint report are pure Python aggregation. Four scanners share one MCP, which is why the consolidation paid off.
 
 ## Product-design choices
 
-Engineering depth alone doesn't make a multi-agent system usable by an operator. The patterns below are about *how the operator interacts with the system*: status taxonomies, channel rules, what the run record carries, when to send an email vs. silence.
+Engineering depth alone does not make a multi-agent system usable by an operator. The patterns below cover how the operator interacts with the system: status taxonomies, channel rules, what the run record carries, and when to send an email versus stay silent.
 
 | Pattern | Summary |
 |---|---|
@@ -163,19 +163,19 @@ Engineering depth alone doesn't make a multi-agent system usable by an operator.
 | [Usage classification](product-design/usage-classification.md) | `usage: cron / manual / subprocess / chained / emergency / deprecated` as a queryable manifest field on every skill. |
 | [Lifecycle + retention](product-design/lifecycle-and-retention.md) | Three retention layers (mechanical, curated, deprecation-not-deletion). Nothing disappears. Things age explicitly. |
 
-Most of these are the opposite of what an engineer would naturally choose. Engineers optimize for fewer steps and automatic resolution. Operators want to know what's happening and decide what to do about it. Each tradeoff trades engineering efficiency for operator clarity.
+Most of these are the opposite of what an engineer would naturally choose. Engineers optimize for fewer steps and automatic resolution. Operators want to know what is happening and decide what to do about it. Each tradeoff favors operator clarity over engineering convenience.
 
 ## Cost-optimization receipts
 
 Numbers I can back up from production:
 
-- **Manager-agent context: 21K → 4.5K tokens per session (79% reduction).** The standup and noon checkup loaded the full agent profile registry; they now load a compressed digest with the same operational signal.
-- **Haiku batch size 6 → 20: ~64% fewer API calls per qualify cycle.** Previous size kept the verbose-JSON Gemini fallback under output-token limits; a separate `HAIKU_BATCH_SIZE` for the primary path doesn't have that constraint.
+- **Manager-agent context: 21K → 4.5K tokens per session (79% reduction).** The standup and noon checkup loaded the full agent profile registry. They now load a compressed digest with the same operational signal.
+- **Haiku batch size 6 → 20: ~64% fewer API calls per qualify cycle.** Previous size kept the verbose-JSON Gemini fallback under output-token limits. A separate `HAIKU_BATCH_SIZE` for the primary path does not have that constraint.
 - **SQLite dedup vs four JSON caches.** Cross-skill queryable in microseconds. No more drift between scanners.
-- **URL-shape gate before LLM.** Regex validators drop fabricated `https://example.com/post/abc` URLs (an LLM hallucination pattern) before they enter the dedup table or hit a Haiku batch.
-- **Model rotation.** Scanners moved Sonnet → Haiku/Flash via the MCP migration. Lower-stakes manager jobs moved to gpt-4o-mini. Operator rating signal stayed flat through both moves: the data that gave me confidence the cost cut wasn't a quality cut.
+- **URL-shape gate before LLM.** Regex validators drop fabricated `https://example.com/post/abc` URLs, an LLM hallucination pattern, before they enter the dedup table or hit a Haiku batch.
+- **Model rotation.** Scanners moved Sonnet → Haiku/Flash via the MCP migration. Lower-stakes manager jobs moved to gpt-4o-mini. Operator rating signal stayed flat through both moves. That data gave me confidence the cost cut was not a quality cut.
 
-Compounding effect: roughly an order-of-magnitude reduction in cost-per-completed-job vs. the naive per-row loop the system started with. Lesson: **order matters more than speed.** A microsecond regex check that runs first is more valuable than a millisecond optimization in the model call.
+Compounding effect: roughly an order-of-magnitude reduction in cost per completed job versus the naive per-row loop the system started with. Lesson: **order matters more than speed.** A microsecond regex check that runs first is more valuable than a millisecond optimization in the model call.
 
 ## Folders
 
