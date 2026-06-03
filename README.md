@@ -2,13 +2,29 @@
 
 [![CI](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/yumik20/multi-agent-orchestration/actions/workflows/ci.yml)
 
-I run a small AI startup as a cofounder. To do that I built a multi-agent system that handles work I'd otherwise need a marketing analyst, a content lead, and an operations manager for: daily intelligence gathering, content drafting, publishing, operational monitoring. Six agents, ~46 skills, ~22 scheduled jobs, running on my laptop every day.
+I run an AI startup as a cofounder. To do that I built a production multi-agent system that handles daily intelligence gathering, content creation, publishing, contact intelligence, lead generation, and operational monitoring. Six specialized agents, 51 skills, 4 MCP servers (25 tools), 22 scheduled cron jobs, 17 launchd daemons, all running autonomously on a single MacBook.
 
 This repo is a curated subset (~1,500 lines). Production is ~25,000 lines of Python and JavaScript. **No external Python packages** (stdlib `urllib` for HTTP, `sqlite3` for state, `subprocess` for orchestration), plus bash and AppleScript. External services: Anthropic, OpenAI, Google LLM APIs, called via stdlib rather than vendor SDKs. Tests pass (`pytest tests/ -q` runs 105 cases in under 200ms). Design choices are documented in [`decisions/`](decisions/) as ADRs.
 
+### Current system scale (June 2026)
+
+| Metric | Count |
+|--------|-------|
+| Agents (specialized, each with distinct model) | 6 |
+| Skills (SKILL.md-defined workflows) | 51 |
+| MCP servers (stdio transport, Python) | 4 |
+| MCP tools (callable by any agent at runtime) | 25 |
+| Scheduled cron jobs | 22 enabled |
+| Launchd daemons (macOS) | 17 active |
+| Session files indexed (SQLite) | 3,200+ |
+| LinkedIn connections (queryable at runtime) | 9,347 |
+| Monthly LLM cost | ~$310 (down from $981 two months prior) |
+| Lines of code (production) | ~25,000 |
+| External Python packages | 0 |
+
 ### What this repo demonstrates, and what it doesn't
 
-It demonstrates operational and system-design depth: MCP tool consolidation, the operator rating eval loop, dual-kill watchdog, error-classifier-driven retries, source-of-truth markdown config, output-contract-before-LLM-spend.
+It demonstrates operational and system-design depth: MCP tool consolidation across 4 servers, the operator rating eval loop (hou-ren-sou inspired), dual-kill watchdog, error-classifier-driven retries, source-of-truth markdown config, output-contract-before-LLM-spend, SQLite session indexing that replaced a 16GB in-memory cache, launchd log evidence for schedule classification, and a schema caching layer for API discovery.
 
 It does not demonstrate algorithmic depth (`assign_overlap_lanes` is a greedy first-fit, the calendar-UI standard) or large-codebase complexity management (the production system has module-graph, SSE-update, and cron-orchestration concerns this excerpt doesn't fully expose). It is not a deployable framework; names, paths, and source-types are sanitized.
 
@@ -34,17 +50,38 @@ The commit timeline reflects when I built the public sample, not when the patter
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────┴──────────────────────────────┐
-│  MCP Server (stdio transport)                           │
-│  • cross-skill tools: run_scan, qualify, smart_dedup,   │
+│  MCP Servers (4 servers, 25 tools, stdio transport)     │
+│                                                         │
+│  scan-pipeline (7):  run_scan, qualify, smart_dedup,    │
 │    weekly_report, cleanup, scan_status, send_email      │
-│  • 30-day SQLite dedup window                           │
-│  • output-contract URL validation before LLM spend      │
+│                                                         │
+│  web-intel (9):  detect_platform, extract_embedded,     │
+│    wellknown_discover, browser_fetch, discover_api,     │
+│    graphql_introspect, x_sign, export_cookies, cache    │
+│                                                         │
+│  contact-intel (4):  recurring_hosts, company_signals,  │
+│    inbox_linkedin_scan, event_history                   │
+│                                                         │
+│  lead-search (5):  first_degree, connections_at,        │
+│    map_brokers, gemini_enrich, warm_path_check          │
+│                                                         │
+│  23/25 tools run 100% locally (no API cost)             │
+│  2 tools call Gemini API (qualify, gemini_enrich)       │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────┴──────────────────────────────┐
-│  Scanners (4 generic source adapters)                   │
+│  Data Layer                                             │
+│  • SQLite session index (replaces 16GB in-memory cache) │
+│  • LinkedIn network (9,347 connections, offline query)  │
+│  • AI leader map (509 people, warm-path cross-ref)      │
+│  • Schema cache (7-day TTL per discovered API)          │
+│  • Calendar EventKit (283 events, recurring host track) │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+┌──────────────────────────┴──────────────────────────────┐
+│  Scanners (4 source adapters + headless Chrome)         │
 │  Browser-automation + API hybrids, LLM quality          │
-│  filtering, common-schema normalization                 │
+│  filtering, HAR capture, anti-bot detection             │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -53,6 +90,12 @@ The commit timeline reflects when I built the public sample, not when the patter
 Month 1, every scanner skill had its own copy of the same loop: read raw scan output, drop URLs seen in the last 30 days, qualify against thesis, write CSV, email. The four JSON dedup files drifted; Tuesday's scan re-qualified URLs Monday's scan had already rejected. The fix was a one-line edit, but I had to make it five times in five places, and I kept missing one.
 
 I pulled the loop into an MCP server with seven tools (`run_scan`, `qualify`, `smart_dedup`, `weekly_report`, `cleanup`, `scan_status`, `send_email`). Each scanner went from ~50 lines of duplicated qualify-loop code to ~3 lines calling the MCP. Four JSON dedup caches became one SQLite table queryable cross-skill.
+
+That first MCP solved the scan problem. Then the same pattern applied everywhere else:
+
+- **web-intel** (9 tools): platform detection, anti-bot strategy recommendation, embedded data extraction (Next.js/Redux/GraphQL hydration), headless Chrome with HAR capture, API discovery with schema caching, GraphQL introspection, cookie persistence. 23 of 25 tools run 100% locally with zero API cost.
+- **contact-intel** (4 tools): recurring host tracking across calendar events (fuzzy-matched by title similarity), company signal detection (2+ people from same company at different events), email inbox scanning for LinkedIn URLs (reads raw MIME source via AppleScript), event history recall.
+- **lead-search** (5 tools): offline cross-reference of 9,347 LinkedIn connections + a 509-person industry map. `first_degree(name)` checks if someone is already connected. `connections_at(company)` finds warm intro paths. `map_brokers()` identifies super-connectors. `gemini_enrich(items, prompt)` runs any research question through Gemini with Google Search grounding, prompt written by the agent at runtime (no code changes between M&A/customer/hire/press searches). `warm_path_check` batches all of the above for a company list.
 
 I picked MCP over a Python library because my skills don't all live in the same runtime. Some are pure Python. Some are bash-orchestrated. Some are LLM-orchestrated and only "call code" by exec-ing a subprocess. Stdio MCP is the cross-runtime contract that works for all three.
 
@@ -85,18 +128,21 @@ The system runs ~46 skills across 6 agents. Each skill is a `SKILL.md` file the 
 
 | Skill | Role | When | MCPs | Model |
 |---|---|---|---|---|
-| `scan-source-a/b/c` | daily intelligence gathering | Mon-Sat 08:00 | scan-pipeline | flash / haiku |
-| `morning-intel` | watchlist sweep | Mon-Sat 10:00 | none | haiku |
-| `creator-blog-publish` | end-to-end publish + self-QA | Mon/Wed/Fri 09:30 | none | gpt-4.1 |
-| `creator-thread-post` | weekly social thread | Sat 13:20 | none | gpt-4.1-mini |
-| `intel-competitive` | competitive scan + memo | Mon/Wed 13:00 | scan-pipeline | flash |
-| `intel-calendar` | daily calendar review | Mon-Sat 07:00 | none | flash |
-| `intel-contacts` | contact prioritization | Mon-Fri 14:00 | none | flash |
-| `manager-noon-checkup` | mid-day status to chat | Mon-Sat 12:00 | none | haiku |
-| `manager-evening-standup` | full-team digest | daily 18:00 | none | haiku |
-| `manager-weekly-strategy` | Friday strategy review | Fri 10:00 | none | sonnet |
-| `manager-workspace-curation` | weekly KB maintenance | Sun 02:00 | none | haiku |
+| `scan-source-a/b/c` | daily intelligence gathering | Mon-Sat 08:00 | scan-pipeline, web-intel | flash |
+| `morning-intel` | watchlist + market trends | Mon-Sat 10:00 | scan-pipeline, web-intel | flash |
+| `creator-blog-daily` | competitor research + write + illustrate + publish + self-QA | Tue-Fri 09:30 | web-intel | gpt-5.5 |
+| `creator-social-post` | queue-driven social posting (verbatim, no LLM rewrite) | weekdays | none (launchd) | none |
+| `intel-competitive` | competitive scan + memo | Mon/Wed 13:00 | scan-pipeline, web-intel | flash |
+| `intel-calendar` | calendar + host network analysis + event attendee lookup | Mon-Sat 07:00 | contact-intel, web-intel | flash |
+| `intel-contacts` | contact prioritization + inbox LinkedIn scan | Mon-Fri 14:00 | contact-intel | flash |
+| `intel-inbox-scan` | weekly email inbox scan for LinkedIn URLs | Sun 08:00 | contact-intel | flash |
+| `manager-noon-checkup` | mid-day status to chat | Mon-Sat 12:00 | scan-pipeline | flash |
+| `manager-evening-standup` | full-team digest | daily 18:00 | contact-intel | flash |
+| `manager-weekly-strategy` | strategy review + network broker analysis | Sat 10:00 | contact-intel, lead-search | flash |
+| `manager-workspace-curation` | weekly KB maintenance + cleanup | Sun 02:00 | none | flash |
 | `eval-evening-ratings` | operator rating collection | daily 18:00 | none | flash |
+| `km-daily-ingest` | promote qualified findings into wiki | Mon-Sat 10:30 | none | gpt-5.5 |
+| `lead-search` | find + enrich + vet + warm-path any lead list | on-demand | lead-search | flash + sonnet |
 | `eval-weekly-memo` | Sunday skill-quality memo | Sun 19:00 | none | (no LLM) |
 | `kb-daily-ingest` | promote findings to wiki | Mon-Sat 10:30 | none | haiku |
 | `kb-weekly-lint` | wiki coverage report | Sun 03:00 | none | (no LLM) |
