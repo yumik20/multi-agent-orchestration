@@ -17,7 +17,7 @@ This repo is a curated subset, about 1,500 lines. Production is about 25,000 lin
 | Scheduled cron jobs | 22 enabled |
 | Launchd daemons (macOS) | 17 active |
 | Session files indexed (SQLite) | 3,200+ |
-| LinkedIn connections (queryable at runtime) | 9,347 |
+| Professional network connections (queryable at runtime) | 9,347 |
 | Monthly LLM cost | ~$310 (down from $981 two months prior) |
 | Lines of code (production) | ~25,000 |
 | External Python packages | 0 |
@@ -72,7 +72,7 @@ The commit timeline reflects when I built the public sample, not when the patter
 ┌──────────────────────────┴──────────────────────────────┐
 │  Data Layer                                             │
 │  • SQLite session index (replaces 16GB in-memory cache) │
-│  • LinkedIn network (9,347 connections, offline query)  │
+│  • Professional network (9,347 connections, offline query)  │
 │  • AI leader map (509 people, warm-path cross-ref)      │
 │  • Schema cache (7-day TTL per discovered API)          │
 │  • Calendar EventKit (283 events, recurring host track) │
@@ -94,8 +94,8 @@ I pulled the loop into an MCP server with seven tools: `run_scan`, `qualify`, `s
 That first MCP solved the scan problem. The same pattern then applied elsewhere:
 
 - **web-intel** (9 tools): platform detection, anti-bot strategy recommendation, embedded data extraction (Next.js/Redux/GraphQL hydration), headless Chrome with HAR capture, API discovery with schema caching, GraphQL introspection, cookie persistence. 23 of 25 tools run 100% locally with zero API cost.
-- **contact-intel** (4 tools): recurring host tracking across calendar events (fuzzy-matched by title similarity), company signal detection (2+ people from same company at different events), email inbox scanning for LinkedIn URLs (reads raw MIME source via AppleScript), event history recall.
-- **lead-search** (5 tools): offline cross-reference of 9,347 LinkedIn connections + a 509-person industry map. `first_degree(name)` checks if someone is already connected. `connections_at(company)` finds warm intro paths. `map_brokers()` identifies super-connectors. `gemini_enrich(items, prompt)` runs any research question through Gemini with Google Search grounding, with the agent writing the prompt at runtime. No code changes between M&A, customer, hire, and press searches. `warm_path_check` batches all of the above for a company list.
+- **contact-intel** (4 tools): recurring host tracking across calendar events (fuzzy-matched by title similarity), company signal detection (2+ people from same company at different events), email inbox scanning for professional-network URLs (reads raw MIME source via AppleScript), event history recall.
+- **lead-search** (5 tools): offline cross-reference of 9,347 Professional network connections + a 509-person industry map. `first_degree(name)` checks if someone is already connected. `connections_at(company)` finds warm intro paths. `map_brokers()` identifies super-connectors. `gemini_enrich(items, prompt)` runs any research question through Gemini with Google Search grounding, with the agent writing the prompt at runtime. No code changes between M&A, customer, hire, and press searches. `warm_path_check` batches all of the above for a company list.
 
 I picked MCP over a Python library because my skills do not all live in the same runtime. Some are pure Python. Some are bash-orchestrated. Some are LLM-orchestrated and only call code by exec-ing a subprocess. Stdio MCP is the cross-runtime contract that works for all three.
 
@@ -134,8 +134,8 @@ The system runs about 46 skills across 6 agents. Each skill is a `SKILL.md` file
 | `creator-social-post` | queue-driven social posting (verbatim, no LLM rewrite) | weekdays | none (launchd) | none |
 | `intel-competitive` | competitive scan + memo | Mon/Wed 13:00 | scan-pipeline, web-intel | flash |
 | `intel-calendar` | calendar + host network analysis + event attendee lookup | Mon-Sat 07:00 | contact-intel, web-intel | flash |
-| `intel-contacts` | contact prioritization + inbox LinkedIn scan | Mon-Fri 14:00 | contact-intel | flash |
-| `intel-inbox-scan` | weekly email inbox scan for LinkedIn URLs | Sun 08:00 | contact-intel | flash |
+| `intel-contacts` | contact prioritization + inbox professional-network scan | Mon-Fri 14:00 | contact-intel | flash |
+| `intel-inbox-scan` | weekly email inbox scan for professional-network URLs | Sun 08:00 | contact-intel | flash |
 | `manager-noon-checkup` | mid-day status to chat | Mon-Sat 12:00 | scan-pipeline | flash |
 | `manager-evening-standup` | full-team digest | daily 18:00 | contact-intel | flash |
 | `manager-weekly-strategy` | strategy review + network broker analysis | Sat 10:00 | contact-intel, lead-search | flash |
